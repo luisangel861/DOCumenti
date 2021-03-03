@@ -18,6 +18,7 @@ class CreateLoteTable extends Migration
             $table->string('nombre');
             $table->string('num_lote');
             $table->date('fecha_entrega');
+            $table->string('id_usuario');
             $table->timestamps();
         });
     }

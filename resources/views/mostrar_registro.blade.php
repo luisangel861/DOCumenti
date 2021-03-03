@@ -105,7 +105,7 @@
                   </div>
                   <div class="form-group">
                     <label for="exampleFormControlFile1">Archivo</label>
-                    <input type="file" class="form-control-file" name="archivo[]">
+                    <input type="file" class="form-control-file" name="archivo">
                     @if($errors->has('archivo'))
                         <label class="text-danger">{{ $errors->first('archivo') }}</label>
                     @endif
