@@ -24,3 +24,4 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::get('/mostrar_lotes', [App\Http\Controllers\LoteController::class, 'mostrar_lotes'])->name('mostrar_lotes');
 Route::get('/mostrar_registro', [App\Http\Controllers\LoteController::class, 'mostrar_registro'])->name('mostrar_registro');
 Route::post('/registrar_lote', [App\Http\Controllers\LoteController::class, 'registrar_lote'])->name('registrar_lote');
+Route::post('/validar_archivo', [App\Http\Controllers\LoteController::class, 'validar_archivo'])->name('validar_archivo');

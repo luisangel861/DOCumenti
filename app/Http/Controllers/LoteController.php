@@ -9,7 +9,6 @@ class LoteController extends Controller
     public function mostrar_lotes(){
 
         $Lotes = Lote::all();
-        
     	return view('listado_lotes',['Lotes'=>$Lotes]);
     }
     public function mostrar_registro(){
@@ -47,5 +46,9 @@ class LoteController extends Controller
     $Lotes = Lote::all();
         return view('listado_lotes',['Lotes'=>$Lotes]);
     }
-    
+    public function validar_archivo(Request $request){
+        echo "validar archivo";
+        
+
+    }
 }
