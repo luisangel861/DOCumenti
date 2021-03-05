@@ -15,11 +15,29 @@ class UsersSeeder extends Seeder
      */
     public function run()
     {
+        /*
         DB::table('users')->insert([
             'nombre' =>'Sol',
             'apellido_paterno' =>'Gómez',
             'apellido_materno' =>'Ríos',
             'email' =>'solgomez2417@gmail.com',
+            'email_verified_at'=>'2021-02-19',
+            'password' =>Hash::make('12345678')
+        ]);
+        */
+        DB::table('users')->insert([
+            'nombre' =>'Luis',
+            'apellido_paterno' =>'Ángel',
+            'apellido_materno' =>'García',
+            'email' =>'lagm861@hotmail.com',
+            'email_verified_at'=>'2021-02-19',
+            'password' =>Hash::make('12345678')
+        ]);
+          DB::table('users')->insert([
+            'nombre' =>'Sol',
+            'apellido_paterno' =>'Gómez',
+            'apellido_materno' =>'Ríos',
+            'email' =>'gomezsol2417@gmail.com',
             'email_verified_at'=>'2021-02-19',
             'password' =>Hash::make('12345678')
         ]);

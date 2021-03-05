@@ -26,3 +26,12 @@ Route::get('/mostrar_registro', [App\Http\Controllers\LoteController::class, 'mo
 Route::post('/registrar_lote', [App\Http\Controllers\LoteController::class, 'registrar_lote'])->name('registrar_lote');
 Route::post('/agregar_archivo', [App\Http\Controllers\LoteController::class, 'agregar_archivo'])->name('agregar_archivo');
 Route::get('/ver_lote/{id_lote?}', [App\Http\Controllers\LoteController::class, 'ver_lote'])->name('ver_lote');
+
+
+/***ADMIN***/
+Route::get('/mostrar_usuarios', [App\Http\Controllers\LoteController::class, 'mostrar_usuarios'])->name('mostrar_usuarios');
+
+Route::get('/registrar_usuario', [App\Http\Controllers\LoteController::class, 'registrar_usuario'])->name('registrar_usuario');
+Route::post('/crear_usuario', [App\Http\Controllers\LoteController::class, 'crear_usuario'])->name('crear_usuario');
+
+

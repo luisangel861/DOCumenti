@@ -4,17 +4,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Lote;
 use App\Models\LoteArchivo;
-  
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class LoteController extends Controller
 {
     public function mostrar_lotes(){
 
-        $Lotes = Lote::all();
+        $Lotes = Lote::where('id_usuario',Auth()->user()->id)
+            ->get();
     	return view('listado_lotes',['Lotes'=>$Lotes]);
     }
     public function mostrar_registro(){
@@ -52,6 +54,13 @@ class LoteController extends Controller
     if (isset($_POST['submit'])) {
          
             $file_mimes = array('text/x-comma-separated-values', 'text/comma-separated-values', 'application/octet-stream', 'application/vnd.ms-excel', 'application/x-csv', 'text/x-csv', 'text/csv', 'application/csv', 'application/excel', 'application/vnd.msexcel', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            $errores['fila_vacia'] = [];
+            $errores['columna_vacia'] = [];
+            $errores['columna_vacia_nombre'] = [];
+            $errores['fecha'] = [];
+            $errores['campo_vacio'] = [];
+            $errores['archivo'] = [];
+
      
             if(isset($_FILES['file']['name'])) {
              
@@ -67,99 +76,87 @@ class LoteController extends Controller
                 $spreadsheet = $reader->load($_FILES['file']['tmp_name']);
                 $sheetData = $spreadsheet->getActiveSheet()->toArray();
                 if (!empty($sheetData)) {
-
+                    $titulos = ['Número de registro','Nombre expediente','Entidad JLCA','Nombre de JLCA','Tipo documental','Nombre del archivo digital','ID','Documentación complementaria','Nombre patrón','Fecha registro','Fecha de última modificación','Nombre del funcionario que certifica','Número de hojas','Descripción','Observaciones','Registro sindical', 'Responsable digitalización 1','Responsable digitalización 2','Fecha digitalización','Derechos','Formato digital','Número de páginas PDF','Usuarios','Hash','Estatus','Nombre de quien publica'];
+                    
                     for ($i=1; $i<count($sheetData); $i++) {
-
-                        $numero_registro = $sheetData[$i][0];
-                        $fecha_registro = $sheetData[$i][9];
-                        $nombre_archivo_digital = $sheetData[$i][5];
-                        $nombre_expediente = $sheetData[$i][1];
-                        $entidad_jlca = $sheetData[$i][2];
-                        $nombre_jlca = $sheetData[$i][3];
-                        $tipo_documental= $sheetData[$i][4];
-                        $id = $sheetData[$i][6];
-                        $documentacion_complementaria = $sheetData[$i][7];
-                        $nombre_patron = $sheetData[$i][8];
-                        $fecha_ultima_modificacion = $sheetData[$i][10];
-                        $nombre_funcionario_certifica = $sheetData[$i][11];
-                        $numero_hojas = $sheetData[$i][12];
-                        $descripcion = $sheetData[$i][13];
-                        $observaciones = $sheetData[$i][14];
-                        $registro_sindical = $sheetData[$i][15];
-                        $responsable_digitalizacion_1= $sheetData[$i][16];
-                        $responsable_digitalizacion_2= $sheetData[$i][17];
-                        $fecha_digitalizacion = $sheetData[$i][18];
-                        $derechos = $sheetData[$i][19];
-                        $formato_digital = $sheetData[$i][20];
-                        $numero_paginas = $sheetData[$i][21];
-                        $usuarios = $sheetData[$i][22];
-                        $hash = $sheetData[$i][23];
-                        $estatus = $sheetData[$i][24];
-                        $nombre_quien_publica = $sheetData[$i][25];
-                        if($numero_registro == NULL && $fecha_registro == NULL && $nombre_archivo_digital== NULL && $nombre_expediente== NULL &&  $entidad_jlca== NULL && $nombre_jlca== NULL  && $tipo_documental== NULL  && $id== NULL && $documentacion_complementaria== NULL && $nombre_patron== NULL && $fecha_ultima_modificacion== NULL && $nombre_funcionario_certifica== NULL && $numero_hojas== NULL && $descripcion== NULL && $observaciones == NULL && $registro_sindical== NULL && $responsable_digitalizacion_1== NULL && $responsable_digitalizacion_2== NULL && $fecha_digitalizacion== NULL && $derechos== NULL && $formato_digital== NULL && $numero_paginas== NULL && $usuarios== NULL && $hash== NULL && $estatus== NULL && $$nombre_quien_publica== NULL){
-                            $errors[] = array("Fila vacia: La Fila ".($i+1)." esta vacia");
-                        }else{
-                        //echo $fecha_registro;
-                        
-                        if($fecha_registro != NULL){
-                            $correcto = $this->validar_fecha($fecha_registro);
-
-                            if($correcto == false){
-
-                            $errors[] = array("Fecha registro: Error en la Fila ".($i+1)." fecha con formato incorrecto. ". $fecha_registro);
+                        //0 -> vacia 1->llena
+                        $fila_vacia = 0;
+                        for($j=0; $j <= 25; $j++){
+                            $fila = $i+1;
+                            if($sheetData[$i][$j] != NULL){
+                                $fila_vacia = 1;
                             }
                         }
-                        else{
-                            $errors[] = array("Fecha registro: Error en la Fila ".($i+1)." Fecha con campo vacio. ".$fecha_registro);
+                        if($fila_vacia == 0){
+                            array_push($errores['fila_vacia'],($fila));
+                            
                         }
-
-                        if($fecha_digitalizacion != NULL){
-                            $correcto = $this->validar_fecha($fecha_digitalizacion);
-
-                            if($correcto == false){
-
-                            $errors[] = array("Fecha digitalización: Error en la Fila ".($i+1)." fecha con formato incorrecto. ". $fecha_digitalizacion);
+                    } 
+                    for ($j=0; $j <=25; $j++) {
+                        //0 -> vacia 1->llena
+                       
+                        $columna_vacia = 0;
+                        for($i=1; $i<count($sheetData); $i++){
+                            $columna = $j;
+                            if($sheetData[$i][$j] != NULL){
+                                $columna_vacia = 1;
                             }
                         }
-                        else{
-                            $errors[] = array("Fecha digitalización: Error en la Fila ".($i+1)." Fecha con campo vacio. ".$fecha_digitalizacion);
-                        }
-
-                        if($fecha_ultima_modificacion != NULL){
-                            $correcto = $this->validar_fecha($fecha_ultima_modificacion);
-
-                            if($correcto == false){
-
-                            $errors[] = array("Fecha última modificación: Error en la Fila ".($i+1)." fecha con formato incorrecto. ". $fecha_ultima_modificacion);
-                            }
-                        }
-                        else{
-                            $errors[] = array("Fecha última modificación: Error en la Fila ".($i+1)." Fecha con campo vacio. ".$fecha_ultima_modificacion);
-                        }
-                        
-                        
-                        if($nombre_archivo_digital != NULL){
-                            $correcto = $this->validar_nombre_archivo($nombre_archivo_digital);
-                            if($correcto == false){
-
-                                $errors[] = array("Nombre del archivo: Error en la Fila ".($i+1)." con carácteres especiales o espacios en blanco. ".$nombre_archivo_digital);
-                            }
-                        }
-                        else{
-                            $errors[] = array("Nombre del archivo:: Error en la Fila ".($i+1)." con campo vacio. ".$nombre_archivo_digital);
+                        if($columna_vacia == 0){
+                            array_push($errores['columna_vacia'],($j+1));
+                            array_push($errores['columna_vacia_nombre'],$titulos[$j]);
+                            
                         }
                     }
+                    
+                    for ($i=1; $i<count($sheetData); $i++) {
+                        for($j=0; $j <= 25; $j++){
+                            if((!in_array($i+1,$errores['fila_vacia'])) && (!in_array($j+1,$errores['columna_vacia']))) {
+                                
+                                if($j == 9 || $j==10 || $j==18){
+                                    if($sheetData[$i][$j] == NULL){
+                                    $fila = $i+1;
+                                    array_push($errores['campo_vacio'],"El campo esta vacio en la fila ".$fila." y columna ".$titulos[$j]);
+                                    }else{
+                                    $fila = $i+1;
+                                    $correcto = $this->validar_fecha($sheetData[$i][$j]);
+
+                                    if($correcto == false){
+                                    array_push($errores['fecha'],"Fecha sin el formato correcto en la fila ".$fila." columna ". $titulos[$j]." ".$sheetData[$i][$j]);
+                                    }
+                                }
+                                }
+                                if($j == 5 ){
+                                    if($sheetData[$i][$j] == NULL){
+                                    $fila = $i+1;
+                                    array_push($errores['campo_vacio'],"El campo esta vacio en la fila ".$fila." y columna ".$titulos[$j]);
+                                    }else{
+                                    $fila = $i+1;
+                                    $correcto = $this->validar_nombre_archivo($sheetData[$i][$j]);
+
+                                    if($correcto == false){
+                                    array_push($errores['archivo'],"El nombre del archivo digital contiene carácteres especiales en la fila ".$fila);
+                                    }
+                                }
+                                }
+                                if($sheetData[$i][$j] == NULL){
+                                    $fila = $i+1;
+                                    array_push($errores['campo_vacio'],"El campo esta vacio en la fila ".$fila." y columna ".$titulos[$j]);
+                                    }
+                            }
+                            
+
+                            }                       
+                        }
                         
-                        
-                    }
-                }
-              
+                    }    
+                }     
+                    
             }
-        
-        }
-    
-    if(sizeof($errors) > 0){
-        return view('mostrar_registro',['errores'=>$errors]);
+    if(sizeof($errores['campo_vacio']) > 0 ||sizeof($errores['fila_vacia']) > 0 ||sizeof($errores['columna_vacia']) > 0 || sizeof($errores['fecha']) > 0 ||  sizeof($errores['archivo']) > 0){
+        $logoImage = $request->file('file');
+        $name = $logoImage->getClientOriginalName();
+        return view('mostrar_registro',['errores'=>$errores,'archivo'=>$name]);
     }else{
         $id_lote = Lote::create($lote)->id;
         $logoImage = $request->file('file');
@@ -181,19 +178,28 @@ class LoteController extends Controller
 
     }
     public function agregar_archivo(Request $request){
+
         if($request['estatus'] == 0){
             $validaciones =[ 
-                //'archivo' => 'required|mimes:xlsx,csv'
+                'file' => 'required'
             ];
             $mensajes =[
-                //'archivo.required' => 'Campo obligatorio',
-                //'archivo.mimes'=>'Formato permitido: .csv y .xlsx'
+                'file.required' => 'Campo obligatorio',
+                //'file.mimes'=>'Formato permitido: .csv y .xlsx'
             ];
         }
-        //$datos = request()->validate($validaciones,$mensajes);
+        $datos = request()->validate($validaciones,$mensajes);
+            
         if (isset($_POST['submit'])) {
          
             $file_mimes = array('text/x-comma-separated-values', 'text/comma-separated-values', 'application/octet-stream', 'application/vnd.ms-excel', 'application/x-csv', 'text/x-csv', 'text/csv', 'application/csv', 'application/excel', 'application/vnd.msexcel', 'text/plain', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            $errores['fila_vacia'] = [];
+            $errores['columna_vacia'] = [];
+            $errores['columna_vacia_nombre'] = [];
+            $errores['fecha'] = [];
+            $errores['campo_vacio'] = [];
+            $errores['archivo'] = [];
+
      
             if(isset($_FILES['file']['name'])) {
              
@@ -206,50 +212,97 @@ class LoteController extends Controller
                 } else {
                     $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
                 }
-
                 $spreadsheet = $reader->load($_FILES['file']['tmp_name']);
                 $sheetData = $spreadsheet->getActiveSheet()->toArray();
-                $errors = array();
-         
                 if (!empty($sheetData)) {
+                    $titulos = ['Número de registro','Nombre expediente','Entidad JLCA','Nombre de JLCA','Tipo documental','Nombre del archivo digital','ID','Documentación complementaria','Nombre patrón','Fecha registro','Fecha de última modificación','Nombre del funcionario que certifica','Número de hojas','Descripción','Observaciones','Registro sindical', 'Responsable digitalización 1','Responsable digitalización 2','Fecha digitalización','Derechos','Formato digital','Número de páginas PDF','Usuarios','Hash','Estatus','Nombre de quien publica'];
+                    
                     for ($i=1; $i<count($sheetData); $i++) {
-                        $fecha_registro = $sheetData[$i][9];
-                        $nombre_archivo = $sheetData[$i][5];
-                        //echo $fecha_registro;
-                        
-                        if($fecha_registro != NULL){
-                            $correcto = $this->validar_fecha($fecha_registro);
-
-                            if($correcto == false){
-
-                            $errors[] = array('error_fecha_registro' => "Error en la Fila ".($i+1)." Fecha con formato incorrecto. ". $fecha_registro);
+                        //0 -> vacia 1->llena
+                        $fila_vacia = 0;
+                        for($j=0; $j <= 25; $j++){
+                            $fila = $i+1;
+                            if($sheetData[$i][$j] != NULL){
+                                $fila_vacia = 1;
                             }
                         }
-                             else{
-                                $errors[] = array('error_fecha_registro' => "Error en la Fila ".($i+1)." Fecha con campo vacio. ".$fecha_registro);
-                            }
-                        
-                        
-                        if($nombre_archivo != NULL){
-                            $correcto = $this->validar_nombre_archivo($nombre_archivo);
-                            if($correcto == false){
-
-                                $errors[] = array('error_nombre_archivo' => "Error en la Fila ".($i+1)." Nombre del archivo digital con carácteres especiales o espacios en blanco. ".$nombre_archivo);
+                        if($fila_vacia == 0){
+                            array_push($errores['fila_vacia'],($fila));
+                            
+                        }
+                    } 
+                    for ($j=0; $j <=25; $j++) {
+                        //0 -> vacia 1->llena
+                       
+                        $columna_vacia = 0;
+                        for($i=1; $i<count($sheetData); $i++){
+                            $columna = $j;
+                            if($sheetData[$i][$j] != NULL){
+                                $columna_vacia = 1;
                             }
                         }
-                        else{
-                            $errors[] = array('error_nombre_archivo' => "Error en la Fila ".($i+1)." Nombre del archivo digital con campo vacio. ".$nombre_archivo);
+                        if($columna_vacia == 0){
+                            array_push($errores['columna_vacia'],($j+1));
+                            array_push($errores['columna_vacia_nombre'],$titulos[$j]);
+                            
                         }
-                        
-                        
                     }
-                }
+                    
+                    for ($i=1; $i<count($sheetData); $i++) {
+                        for($j=0; $j <= 25; $j++){
+                            if((!in_array($i+1,$errores['fila_vacia'])) && (!in_array($j+1,$errores['columna_vacia']))) {
+                                
+                                if($j == 9 || $j==10 || $j==18){
+                                    if($sheetData[$i][$j] == NULL){
+                                    $fila = $i+1;
+                                    array_push($errores['campo_vacio'],"El campo esta vacio en la fila ".$fila." y columna ".$titulos[$j]);
+                                    }else{
+                                    $fila = $i+1;
+                                    $correcto = $this->validar_fecha($sheetData[$i][$j]);
+
+                                    if($correcto == false){
+                                    array_push($errores['fecha'],"Fecha sin el formato correcto en la fila ".$fila." columna ". $titulos[$j]." ".$sheetData[$i][$j]);
+                                    }
+                                }
+                                }
+                                if($j == 5 ){
+                                    if($sheetData[$i][$j] == NULL){
+                                    $fila = $i+1;
+                                    array_push($errores['campo_vacio'],"El campo esta vacio en la fila ".$fila." y columna ".$titulos[$j]);
+                                    }else{
+                                    $fila = $i+1;
+                                    $correcto = $this->validar_nombre_archivo($sheetData[$i][$j]);
+
+                                    if($correcto == false){
+                                    array_push($errores['archivo'],"El nombre del archivo digital contiene carácteres especiales en la fila ".$fila);
+                                    }
+                                }
+                                }
+                                if($sheetData[$i][$j] == NULL){
+                                    $fila = $i+1;
+                                    array_push($errores['campo_vacio'],"El campo esta vacio en la fila ".$fila." y columna ".$titulos[$j]);
+                                    }
+                            }
+                            
+
+                            }                       
+                        }
+                        
+                    }  
               
             }
         
-        }
-        if(sizeof($errors) > 0){
-        return view('mostrar_registro',['errores'=>$errors]);
+        
+        if(sizeof($errores['campo_vacio']) > 0 ||sizeof($errores['fila_vacia']) > 0 ||sizeof($errores['columna_vacia']) > 0 || sizeof($errores['fecha']) > 0 ||  sizeof($errores['archivo']) > 0){
+        $archivos = LoteArchivo::where('id_lote',$request['id_lote'])
+                                ->get();
+
+        $lotes = Lote::where('id',$request['id_lote'])
+                    ->get();
+        $logoImage = $request->file('file');
+        $name = $logoImage->getClientOriginalName();
+
+        return view('mostrar_registro',['errores'=>$errores,'archivos'=>$archivos,'id_lote'=>$request['id_lote'],'lote'=>$lotes,'archivo'=>$name]);
 
         } else{
         $logoImage = $request->file('file');
@@ -270,7 +323,17 @@ class LoteController extends Controller
 
    
 }
+}
     
+    function ver_lote(){
+        $id_lote = $_GET["id_lote"];
+        $archivos = LoteArchivo::where('id_lote',$id_lote)
+                                ->get();
+
+        $lotes = Lote::where('id',$id_lote)
+                    ->get();
+        return view('mostrar_registro',['lote'=>$lotes,'archivos'=>$archivos,'id_lote'=>$id_lote]);
+    }
 
     function validar_fecha($fecha){
         $patron = '/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/';
@@ -298,10 +361,47 @@ class LoteController extends Controller
         }
 
     }
-    public function ver_lote(){
-        $id_lote = $_GET["id_lote"];
-        echo "ver lote";
+    public function registrar_usuario(){
+        $usuarios = user::all();
+        //echo "<pre>";
+        return view('crear_usuario',['usuarios'=>$usuarios]);
+        
     }
+    public function crear_usuario(Request $request){
+    if($request['estatus'] == 0){
+
+        $validaciones =[ 
+            'nombre' => 'required',
+            'apellido_paterno'=>'required',
+            'apellido_materno' => 'required',
+            'email' => 'required',
+            'password' => 'required',
+
+        ];
+        $mensajes =[
+            'nombre.required' => 'Campo obligatorio',
+            'apellido_paterno.required' => 'Campo obligatorio',
+            'apellido_materno.required' => 'Campo obligatorio',
+            'email.required' => 'Campo obligatorio',
+            'password.required' => 'Campo obligatorio'
+        ];
+
+        $datos = request()->validate($validaciones,$mensajes);
+        
+    }
+    $usuario = [];
+    $usuario['nombre'] = $request['nombre'];
+    $usuario['apellido_paterno'] = $request['apellido_paterno'];
+    $usuario['apellido_materno'] = $request['apellido_materno'];
+    $usuario['email'] = $request['email'];
+    $usuario['email_verified_at'] = '2021-03-05';
+    $usuario['password'] = Hash::make($request['password']);
+    
+
+    user::create($usuario);
+    $usuarios = user::all();
+    return view('crear_usuario',['usuarios'=>$usuarios]);
+
+    }
+    
 }
-
-

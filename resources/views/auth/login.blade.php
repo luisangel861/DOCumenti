@@ -24,11 +24,11 @@
         <main class="py-4">
             <div class="container">                
                 <div class="row justify-content-center">
-                    <div class="col-md-12"> <center> <img src="{{asset('images/Logo_DOCUMENTI.png')}}" width="130" alt="" style="padding-bottom: 50px; padding-top:50px;"></center></div>                   
+                    <div class="col-md-12"> <center> <img src="{{asset('images/Logo_DOCUMENTI.png')}}" width="150" alt="" style="padding-bottom: 50px; padding-top:50px;"></center></div>                   
                     <div class="col-md-8">
                         <div class="card">
                             <div class="card-header">
-                                {{ __('Acceso al sistema') }}
+                                <p class="text-center mb-0 font-weight-bold ">{{ __('Inicia sesión') }}</p>
                             </div>            
                             <div class="card-body">
                                 <form method="POST" action="{{ route('login') }}">

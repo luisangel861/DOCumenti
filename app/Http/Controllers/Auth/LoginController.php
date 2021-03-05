@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Auth;
 
+
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Facades\Auth;
+
+
 
 
 class LoginController extends Controller
@@ -54,7 +58,15 @@ class LoginController extends Controller
             }
            
              if ($this->attemptLogin($request)) {
-                return redirect('/mostrar_lotes');
+
+                if (Auth::user()->hasRole('Administrador')) {
+                    return redirect('/registrar_usuario');
+
+                }else{
+                    return redirect('/mostrar_lotes'); 
+                }
+
+                
             }
 
             // If the login attempt was unsuccessful we will increment the number of attempts
