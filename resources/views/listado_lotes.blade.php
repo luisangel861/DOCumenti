@@ -12,9 +12,7 @@
                     <th>Numero lote</th>
                     <th>Nombre lote</th>
                     <th>Fecha Entrega</th>
-                    <th># Documentos Guardado</th>
-                    {{-- <th>Editar</th>
-                    <th>Eliminar</th> --}}
+                    <th>Editar</th>
                 </tr>
             </thead>
             <tbody>
@@ -24,11 +22,7 @@
                     <td>{{$item->num_lote}}</td>
                     <td>{{$item->nombre}}</td>
                     <td>{{$item->fecha_entrega}}</td>
-                    <td></td>
-                    {{-- <td>
-                    <a> href="{{ url('mostrar_registro'.$item->id.'/edit')}}"</a>
-                    </td>
-                    <td>Eliminar</td> --}}
+                    <td><a href="{{url('/')}}/ver_lote?id_lote={{$item->id}}">Ver lote</a></td>
                 </tr>
                 @endforeach
             </tbody>
